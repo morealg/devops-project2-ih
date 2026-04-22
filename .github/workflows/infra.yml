@@ -1,0 +1,85 @@
+# ============================================================
+# FILE: .github/workflows/infra.yml
+# PURPOSE: Runs Terraform to manage Azure infrastructure.
+#   - On Pull Request → only shows a PLAN (no real changes)
+#   - On merge to main → actually APPLIES changes to Azure
+# ============================================================
+
+name: Infrastructure (Terraform)
+
+on:
+  push:
+    branches: [main]
+    paths: ['infra/**']        # Only triggers if files in /infra folder changed
+  pull_request:
+    branches: [main]
+    paths: ['infra/**']
+
+jobs:
+  terraform:
+    name: Terraform Plan & Apply
+    runs-on: ubuntu-latest     # GitHub-hosted runner (free, clean VM every run)
+
+    defaults:
+      run:
+        working-directory: ./infra   # All commands below run inside the /infra folder
+
+    steps:
+
+      # 1. Download your repo code onto the runner machine
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Install the Terraform CLI tool on the runner
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.0
+
+      # 3. Log into Azure using credentials stored as GitHub Secrets
+      #    (You will add these secrets in Step 2 of the project)
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # 4. Check code formatting — fails if Terraform files are not clean
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      # 5. Download required Azure provider plugins + connect to remote state backend
+      - name: Terraform Init
+        run: terraform init
+        env:
+          ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET:   ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # 6. Validate syntax is correct
+      - name: Terraform Validate
+        run: terraform validate
+
+      # 7. PLAN — shows what WOULD change. Runs on every Pull Request.
+      #    This is safe — it never touches real infrastructure.
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+        env:
+          ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET:   ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_sql_password: ${{ secrets.SQL_PASSWORD }}
+
+      # 8. APPLY — actually creates/updates Azure resources.
+      #    ONLY runs when code is merged into main (not on PRs).
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve tfplan
+        env:
+          ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET:   ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_sql_password: ${{ secrets.SQL_PASSWORD }}
+
