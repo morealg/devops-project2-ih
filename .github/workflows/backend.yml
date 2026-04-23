@@ -3,10 +3,8 @@ name: Backend CI/CD
 on:
   push:
     branches: [main]
-    paths: ['backend/**']
   pull_request:
     branches: [main]
-    paths: ['backend/**']
 
 jobs:
   build:
@@ -29,15 +27,13 @@ jobs:
       - name: Build with Maven
         working-directory: ./backend
         run: |
-          # Force the runner to use the Java 21 path
+          # Force Java 21
           export JAVA_HOME=$JAVA_HOME_21_X64
           export PATH=$JAVA_HOME/bin:$PATH
           
-          # Run clean package with tests enabled
           mvn clean package -DskipTests=false
         env:
           SPRING_PROFILES_ACTIVE: test
-          # These must match the names in your GitHub Secrets screenshot exactly
           AZURE_SQL_HOSTNAME: ${{ secrets.AZURE_SQL_HOSTNAME }}
           AZURE_SQL_DBNAME: ${{ secrets.AZURE_SQL_DBNAME }}
           AZURE_SQL_USER: ${{ secrets.AZURE_SQL_USER }}
@@ -54,7 +50,6 @@ jobs:
     name: SonarQube Code Quality Scan
     runs-on: self-hosted
     needs: build
-    # Only runs if Sonar is enabled in vars and build passes
     if: (github.event_name == 'pull_request' || github.ref == 'refs/heads/main') && vars.ENABLE_SONAR == 'true'
     steps:
       - name: Checkout Code
