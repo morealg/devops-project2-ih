@@ -55,8 +55,8 @@ jobs:
       # 4. Run unit tests (if you have any)
       - name: Run Tests
         working-directory: ./frontend
-        run: npm test -- --watchAll=false --passWithNoTests
-        # --passWithNoTests means it won't fail if there are no test files yet
+        run: npm test -- --run
+        # This project uses Vitest, so we run the suite once in CI mode.
 
       # 5. Build the production bundle (outputs to frontend/dist/)
       - name: Build for Production
@@ -86,7 +86,7 @@ jobs:
     name: Deploy to Frontend VM
     runs-on: self-hosted       # ← This is YOUR Ops VM, not GitHub's servers
     needs: build               # ← Only starts AFTER the build job succeeds
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.ENABLE_PRIVATE_DEPLOY == 'true'
 
     steps:
 
@@ -105,8 +105,8 @@ jobs:
       #    WHY Ansible: It handles SSH, permissions, service restarts automatically.
       - name: Deploy via Ansible
         run: |
-          ansible-playbook ansible/deploy-frontend.yml \
-            -i ansible/inventory.ini \
+          ansible-playbook config/ansible/playbooks/deploy-frontend.yml \
+            -i config/ansible/inventories/dev/hosts.yml \
             --extra-vars "artifact_path=./dist"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"

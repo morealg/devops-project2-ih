@@ -4,7 +4,7 @@
 A full-stack Burger Builder web application deployed on a production-style 3-tier Azure architecture. The app is exposed only via Application Gateway (WAF v2) with private networking end-to-end.
 
 ## Architecture
-![Architecture Diagram](docs/architecture-diagram.png)
+The architecture diagram will be added at `docs/architecture-diagram.png` once the Terraform implementation is in place.
 
 ## Prerequisites
 - Azure CLI installed and logged in (`az login`)
@@ -15,6 +15,9 @@ A full-stack Burger Builder web application deployed on a production-style 3-tie
 - GitHub repository access
 
 ## 1. Infrastructure Provisioning (Terraform)
+
+Terraform folder scaffolding is ready under `infra/terraform/`.
+The actual Terraform code will be added next.
 
 ### Bootstrap (run once)
 ```bash
@@ -31,13 +34,20 @@ terraform apply
 ```
 
 ## 2. Server Configuration (Ansible)
+Ansible folder scaffolding is ready under `config/ansible/`.
+Playbooks and inventory will be added as Person 2 implements the server configuration layer.
+
 ```bash
 cd config/ansible
-ansible-playbook site.yml -i inventories/dev/hosts.yml
+# Example future command once playbooks are added:
+# ansible-playbook playbooks/site.yml -i inventories/dev/hosts.yml
 ```
 
 ## 3. Deploy (GitHub Actions)
-Push to `main` branch — pipelines run automatically:
+Workflow scaffolding is present in `.github/workflows/`.
+Deploy jobs are intentionally gated until private infrastructure and Ansible playbooks exist.
+
+Push to `main` branch after implementation is ready:
 - `infra.yml` — provisions infrastructure
 - `frontend.yml` — builds and deploys React app
 - `backend.yml` — builds and deploys Java app
@@ -47,7 +57,7 @@ Push to `main` branch — pipelines run automatically:
 ### Test via App Gateway
 ```bash
 curl http://<AGW_PUBLIC_IP>/
-curl http://<AGW_PUBLIC_IP>/api/health
+curl http://<AGW_PUBLIC_IP>/api/ingredients
 ```
 
 ### Verify Security

@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.*.local
+environment.env
 
 # IDE
 .vscode/
@@ -22,8 +23,18 @@ yarn-error.log*
 *.tmp
 *.temp
 
-**/**/.terraform/
-**/**/.terraform.lock.hcl
-**/**/*.tfstate
-**/**/target/
+# Frontend generated output
+frontend/coverage/
+frontend/dist/
+frontend/test-results.json
+frontend/test-results.xml
+
+# Terraform local state
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+crash.log
+
+# Java build output
+**/target/
 

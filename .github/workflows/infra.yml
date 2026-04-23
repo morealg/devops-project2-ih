@@ -10,10 +10,14 @@ name: Infrastructure (Terraform)
 on:
   push:
     branches: [main]
-    paths: ['infra/**']        # Only triggers if files in /infra folder changed
+    paths:
+      - 'infra/terraform/**/*.tf'
+      - 'infra/terraform/**/*.tfvars'
   pull_request:
     branches: [main]
-    paths: ['infra/**']
+    paths:
+      - 'infra/terraform/**/*.tf'
+      - 'infra/terraform/**/*.tfvars'
 
 jobs:
   terraform:
@@ -22,7 +26,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./infra   # All commands below run inside the /infra folder
+        working-directory: ./infra/terraform   # All commands below run inside the Terraform root
 
     steps:
 
