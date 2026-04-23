@@ -1,3 +1,8 @@
+# ============================================================
+# FILE: .github/workflows/backend.yml
+# PURPOSE: Builds the Spring Boot backend JAR and deploys it.
+# ============================================================
+
 name: Backend CI/CD
 
 on:
@@ -9,16 +14,22 @@ on:
     paths: ['backend/**']
 
 jobs:
+
+  # ─────────────────────────────────────────────
+  # JOB 1: BUILD — runs on GitHub-hosted runner
+  # ─────────────────────────────────────────────
   build:
     name: Build Spring Boot App
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Get the code
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # 2. Install Java 21
       - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
@@ -26,16 +37,25 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      # 3. Run tests + package into a JAR file
       - name: Build with Maven
         working-directory: ./backend
         run: |
-          # This line is the fix: it forces the environment to use Java 21
+          # FORCE JAVA 21 (Fixes "release version 21 not supported")
           export JAVA_HOME=$JAVA_HOME_21_X64
           export PATH=$JAVA_HOME/bin:$PATH
+          
+          # Run the build
           mvn clean package -DskipTests=false
         env:
           SPRING_PROFILES_ACTIVE: test
+          # SQL Secrets for Unit Tests
+          AZURE_SQL_HOSTNAME: ${{ secrets.AZURE_SQL_HOSTNAME }}
+          AZURE_SQL_DBNAME: ${{ secrets.AZURE_SQL_DBNAME }}
+          AZURE_SQL_USER: ${{ secrets.AZURE_SQL_USER }}
+          AZURE_SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
 
+      # 4. Save the JAR file for the deploy job
       - name: Upload JAR Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -43,21 +63,27 @@ jobs:
           path: backend/target/*.jar
           retention-days: 1
 
+  # ─────────────────────────────────────────────
+  # JOB 2: SONARQUBE SCAN — runs on self-hosted runner
+  # ─────────────────────────────────────────────
   sonarqube:
     name: SonarQube Code Quality Scan
     runs-on: self-hosted
     needs: build
     if: (github.event_name == 'pull_request' || github.ref == 'refs/heads/main') && vars.ENABLE_SONAR == 'true'
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
+
       - name: SonarQube Analysis
         working-directory: ./backend
         run: |
@@ -66,19 +92,25 @@ jobs:
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
+  # ─────────────────────────────────────────────
+  # JOB 3: DEPLOY — runs on self-hosted runner
+  # ─────────────────────────────────────────────
   deploy:
     name: Deploy to Backend VM
     runs-on: self-hosted
     needs: [build, sonarqube]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.ENABLE_PRIVATE_DEPLOY == 'true'
+
     steps:
       - name: Download JAR Artifact
         uses: actions/download-artifact@v4
         with:
           name: backend-jar
           path: ./target
+
       - name: Checkout Code
         uses: actions/checkout@v4
+
       - name: Deploy via Ansible
         run: |
           ansible-playbook config/ansible/playbooks/deploy-backend.yml \
@@ -86,6 +118,7 @@ jobs:
             --extra-vars "artifact_path=./target"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
+
       - name: Health Check
         run: |
           sleep 15
