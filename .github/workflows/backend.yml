@@ -29,7 +29,7 @@ jobs:
       - name: Build with Maven
         working-directory: ./backend
         run: |
-          # FORCE MAVEN TO USE JAVA 21 PATH
+          # This line is the fix: it forces the environment to use Java 21
           export JAVA_HOME=$JAVA_HOME_21_X64
           export PATH=$JAVA_HOME/bin:$PATH
           mvn clean package -DskipTests=false
@@ -47,21 +47,17 @@ jobs:
     name: SonarQube Code Quality Scan
     runs-on: self-hosted
     needs: build
-    # Only runs if Person 2 has the runner ready and the variable is enabled
     if: (github.event_name == 'pull_request' || github.ref == 'refs/heads/main') && vars.ENABLE_SONAR == 'true'
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-
       - name: SonarQube Analysis
         working-directory: ./backend
         run: |
@@ -75,17 +71,14 @@ jobs:
     runs-on: self-hosted
     needs: [build, sonarqube]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.ENABLE_PRIVATE_DEPLOY == 'true'
-
     steps:
       - name: Download JAR Artifact
         uses: actions/download-artifact@v4
         with:
           name: backend-jar
           path: ./target
-
       - name: Checkout Code
         uses: actions/checkout@v4
-
       - name: Deploy via Ansible
         run: |
           ansible-playbook config/ansible/playbooks/deploy-backend.yml \
@@ -93,7 +86,6 @@ jobs:
             --extra-vars "artifact_path=./target"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
-
       - name: Health Check
         run: |
           sleep 15
