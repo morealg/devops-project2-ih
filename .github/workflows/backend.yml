@@ -29,7 +29,6 @@ jobs:
       - name: Build with Maven
         working-directory: ./backend
         run: |
-          # Ensuring the environment uses the Java 21 path specifically
           export JAVA_HOME=$JAVA_HOME_21_X64
           export PATH=$JAVA_HOME/bin:$PATH
           mvn clean package -DskipTests=false
