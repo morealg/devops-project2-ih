@@ -9,14 +9,14 @@ import './OrderSummary.css';
 const OrderSummary: React.FC = () => {
   const { cart, getTotalPrice, clearCart } = useCart();
   const navigate = useNavigate();
-  
+
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails>({
     name: '',
     email: '',
     phone: '',
     address: '',
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -54,7 +54,7 @@ const OrderSummary: React.FC = () => {
     try {
       // Get current backend cart items
       const backendCartItems = await getCart(sessionId);
-      
+
       // If backend cart is empty but local cart has items, add them to backend
       if (backendCartItems.length === 0 && cart.length > 0) {
         for (const cartItem of cart) {
@@ -92,20 +92,20 @@ const OrderSummary: React.FC = () => {
 
     try {
       const sessionId = getSessionId();
-      
+
       // First, sync the local cart with the backend
       await syncCartWithBackend(sessionId);
-      
+
       // Then fetch the actual cart items from the backend to get real IDs
       const backendCartItems = await getCart(sessionId);
-      
+
       if (backendCartItems.length === 0) {
         setError('No items found in cart. Please add items and try again.');
         return;
       }
-      
+
       const cartItemIds = backendCartItems.map(item => item.id);
-      
+
       const orderData = {
         sessionId,
         customerName: customerDetails.name,
@@ -121,11 +121,8 @@ const OrderSummary: React.FC = () => {
     } catch (err) {
       console.error('Failed to create order:', err);
       setError('Failed to place order. Please try again.');
-      // For demo: simulate successful order
-      const mockOrderId = `ORD-${Date.now()}`;
-      setOrderId(mockOrderId);
-      setOrderPlaced(true);
-      clearCart();
+      // ✅ FIXED: removed mock order simulation — we only show success
+      //           if the backend actually confirmed the order.
     } finally {
       setLoading(false);
     }
@@ -173,7 +170,7 @@ const OrderSummary: React.FC = () => {
       <div className="checkout-container">
         <div className="checkout-form">
           <h2 className="section-title">Customer Details</h2>
-          
+
           {error && (
             <div className="error-message">
               ⚠️ {error}
@@ -245,7 +242,7 @@ const OrderSummary: React.FC = () => {
 
         <div className="order-review">
           <h2 className="section-title">Order Review</h2>
-          
+
           <div className="review-items">
             {cart.map((item) => (
               <div key={item.id} className="review-item">
@@ -287,4 +284,3 @@ const OrderSummary: React.FC = () => {
 };
 
 export default OrderSummary;
-
