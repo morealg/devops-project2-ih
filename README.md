@@ -56,15 +56,14 @@ Push to `main` branch after implementation is ready:
 
 ### Test via App Gateway
 ```bash
-curl http://20.230.242.199/
-curl http://20.230.242.199/api/ingredients
+curl https://20.230.242.199/
+curl https://20.230.242.199/api/ingredients
 ```
 
 ### Verify Security
-```bash
-# This should FAIL (SQL is private)
-curl http://sql-bb-dev-team5.database.windows.net
-```
+- VMs have no public IPs — verified in Azure Portal
+- SQL public network access: Disabled — verified in Azure Portal  
+- Key Vault public network access: Disabled — verified in Azure Portal
 
 ## 5. Monitoring
 - Application Insights — requests, failures, dependencies
