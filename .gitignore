@@ -35,6 +35,11 @@ frontend/test-results.xml
 **/*.tfstate.*
 crash.log
 
+# Terraform variable files
+infra/terraform/envs/dev/*.auto.tfvars
+
 # Java build output
 **/target/
 
+# Certificates
+infra/terraform/envs/dev/certs/

@@ -3,10 +3,8 @@ name: Backend CI/CD
 on:
   push:
     branches: [main]
-    paths: ['backend/**']
   pull_request:
     branches: [main]
-    paths: ['backend/**']
 
 jobs:
   build:
@@ -26,10 +24,9 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Build with Maven
+      - name: Build with Maven (Tests)
         working-directory: ./backend
         run: |
-          # This line is the fix: it forces the environment to use Java 21
           export JAVA_HOME=$JAVA_HOME_21_X64
           export PATH=$JAVA_HOME/bin:$PATH
           mvn clean package -DskipTests=false
@@ -86,7 +83,11 @@ jobs:
             --extra-vars "artifact_path=./target"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
+          AZURE_SQL_HOSTNAME: sql-bb-dev-team5.database.windows.net
+          AZURE_SQL_DBNAME: burgerbuilderdb
+          AZURE_SQL_USER: ${{ secrets.AZURE_SQL_USER }}
+          AZURE_SQL_PASSWORD: ${{ secrets.AZURE_SQL_PASSWORD }}
       - name: Health Check
         run: |
           sleep 15
-          curl -f http://${{ secrets.BACKEND_VM_IP }}:8080/actuator/health | grep '"status":"UP"'
+          curl -f https://20.230.242.199/api/actuator/health | grep '"status":"UP"'
