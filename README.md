@@ -56,14 +56,14 @@ Push to `main` branch after implementation is ready:
 
 ### Test via App Gateway
 ```bash
-curl http://<AGW_PUBLIC_IP>/
-curl http://<AGW_PUBLIC_IP>/api/ingredients
+curl http://20.230.242.199/
+curl http://20.230.242.199/api/ingredients
 ```
 
 ### Verify Security
 ```bash
 # This should FAIL (SQL is private)
-curl http://<SQL_SERVER>.database.windows.net
+curl http://sql-bb-dev-team5.database.windows.net
 ```
 
 ## 5. Monitoring
