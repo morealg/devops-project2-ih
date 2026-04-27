@@ -90,7 +90,7 @@
   notify: Restart backend service
 
 - name: Reload systemd so it notices the new unit
-  ansible.builtin.systemd_service:
+  ansible.builtin.systemd:
     daemon_reload: true
 
 - name: Ensure the backend service is enabled and running
