@@ -49,7 +49,10 @@ module "keyvault" {
   additional_secret_reader_object_ids = compact([
     module.vm_ops.principal_id
   ])
-  tags = local.common_tags
+  additional_secret_writer_object_ids = compact([
+    module.vm_ops.principal_id
+  ])
+  tags                       = local.common_tags
 }
 
 module "vm_web" {

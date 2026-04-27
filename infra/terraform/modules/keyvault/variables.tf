@@ -39,6 +39,12 @@ variable "additional_secret_reader_object_ids" {
   default     = []
 }
 
+variable "additional_secret_writer_object_ids" {
+  description = "Additional Entra object IDs that should be able to create and update Key Vault secrets"
+  type        = list(string)
+  default     = []
+}
+
 variable "tags" {
   description = "Common tags"
   type        = map(string)
