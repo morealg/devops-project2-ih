@@ -26,7 +26,7 @@ resource "azurerm_application_gateway" "main" {
     rule_set_version = "3.2"
   }
 
-    ssl_policy {
+  ssl_policy {
     policy_type          = "Predefined"
     policy_name          = "AppGwSslPolicy20220101"
   }
