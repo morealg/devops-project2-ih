@@ -15,3 +15,12 @@ azure_sql_dbname: burgerbuilderdb
 key_vault_name: kv-bb-dev-team5
 sql_admin_username_secret_name: sql-admin-username
 sql_admin_password_secret_name: sql-admin-password
+
+sonarqube_root: /opt/sonarqube
+sonarqube_network: sonarqube-net
+sonarqube_postgres_container: sonarqube-postgres
+sonarqube_container: sonarqube
+sonarqube_postgres_db: sonarqube
+sonarqube_postgres_user: sonarqube
+sonarqube_postgres_password: SonarQubeDbPass123!
+sonarqube_port: 9000

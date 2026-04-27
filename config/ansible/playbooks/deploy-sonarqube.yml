@@ -1,0 +1,7 @@
+- name: Configure and deploy SonarQube on the ops VM
+  hosts: ops
+  become: true
+
+  roles:
+    - role: common
+    - role: sonarqube
