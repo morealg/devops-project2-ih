@@ -59,6 +59,57 @@
   register: sql_admin_password_value
   changed_when: false
 
+- name: Save SQL username as a fact
+  ansible.builtin.set_fact:
+    sql_admin_username: "{{ sql_admin_username_value.stdout | trim }}"
+
+- name: Save SQL password as a fact
+  ansible.builtin.set_fact:
+    sql_admin_password: "{{ sql_admin_password_value.stdout | trim }}"
+
+- name: Check whether burger_layers table exists
+  ansible.builtin.shell: >
+    /opt/mssql-tools18/bin/sqlcmd
+    -S {{ azure_sql_hostname }}
+    -d {{ azure_sql_dbname }}
+    -U "{{ sql_admin_username }}"
+    -P "{{ sql_admin_password }}"
+    -C
+    -h -1
+    -W
+    -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'burger_layers';"
+  register: burger_layers_table_check
+  changed_when: false
+  delegate_to: localhost
+  run_once: true
+
+- name: Run schema.sql when database is not initialized
+  ansible.builtin.shell: >
+    /opt/mssql-tools18/bin/sqlcmd
+    -S {{ azure_sql_hostname }}
+    -d {{ azure_sql_dbname }}
+    -U "{{ sql_admin_username }}"
+    -P "{{ sql_admin_password }}"
+    -C
+    -i /home/azureuser/repo_clean/backend/src/main/resources/schema.sql
+  when: burger_layers_table_check.stdout | trim == "0"
+  delegate_to: localhost
+  run_once: true
+
+- name: Run data.sql when database is not initialized
+  ansible.builtin.shell: >
+    /opt/mssql-tools18/bin/sqlcmd
+    -S {{ azure_sql_hostname }}
+    -d {{ azure_sql_dbname }}
+    -U "{{ sql_admin_username }}"
+    -P "{{ sql_admin_password }}"
+    -C
+    -i /home/azureuser/repo_clean/backend/src/main/resources/data.sql
+  when: burger_layers_table_check.stdout | trim == "0"
+  delegate_to: localhost
+  run_once: true
+
+
 - name: Copy the backend jar to the VM
   ansible.builtin.copy:
     src: "{{ backend_artifact_file }}"
