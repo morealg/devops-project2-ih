@@ -26,7 +26,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ./infra/terraform/envs/devs   # All commands below run inside the Terraform root
+        working-directory: ./infra/terraform/envs/dev   # All commands below run inside the Terraform root
 
     steps:
 

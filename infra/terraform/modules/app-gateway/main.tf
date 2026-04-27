@@ -27,8 +27,8 @@ resource "azurerm_application_gateway" "main" {
   }
 
   ssl_policy {
-    policy_type          = "Predefined"
-    policy_name          = "AppGwSslPolicy20220101"
+    policy_type = "Predefined"
+    policy_name = "AppGwSslPolicy20220101"
   }
 
   gateway_ip_configuration {
@@ -46,7 +46,7 @@ resource "azurerm_application_gateway" "main" {
     public_ip_address_id = azurerm_public_ip.appgw.id
   }
 
-   ssl_certificate {
+  ssl_certificate {
     name     = "appgw-cert"
     data     = var.certificate_data
     password = var.certificate_password
