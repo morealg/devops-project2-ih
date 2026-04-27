@@ -7,6 +7,31 @@ resource "azurerm_virtual_network" "main" {
   tags = var.tags
 }
 
+resource "azurerm_public_ip" "nat_gateway" {
+  name                = "pip-nat-${var.project_code}-${var.environment}"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+
+  tags = var.tags
+}
+
+resource "azurerm_nat_gateway" "main" {
+  name                    = "nat-${var.project_code}-${var.environment}"
+  location                = var.location
+  resource_group_name     = var.resource_group_name
+  sku_name                = "Standard"
+  idle_timeout_in_minutes = 10
+
+  tags = var.tags
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "main" {
+  nat_gateway_id       = azurerm_nat_gateway.main.id
+  public_ip_address_id = azurerm_public_ip.nat_gateway.id
+}
+
 resource "azurerm_subnet" "agw" {
   name                 = "snet-agw"
   resource_group_name  = var.resource_group_name
@@ -95,4 +120,19 @@ resource "azurerm_subnet_network_security_group_association" "ops" {
 resource "azurerm_subnet_network_security_group_association" "private_endpoints" {
   subnet_id                 = azurerm_subnet.private_endpoints.id
   network_security_group_id = azurerm_network_security_group.private_endpoints.id
+}
+
+resource "azurerm_subnet_nat_gateway_association" "web" {
+  subnet_id      = azurerm_subnet.web.id
+  nat_gateway_id = azurerm_nat_gateway.main.id
+}
+
+resource "azurerm_subnet_nat_gateway_association" "api" {
+  subnet_id      = azurerm_subnet.api.id
+  nat_gateway_id = azurerm_nat_gateway.main.id
+}
+
+resource "azurerm_subnet_nat_gateway_association" "ops" {
+  subnet_id      = azurerm_subnet.ops.id
+  nat_gateway_id = azurerm_nat_gateway.main.id
 }

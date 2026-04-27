@@ -39,3 +39,13 @@ output "nsg_ids" {
     private_endpoints = azurerm_network_security_group.private_endpoints.id
   }
 }
+
+output "nat_gateway_id" {
+  description = "NAT Gateway ID for private subnet outbound access"
+  value       = azurerm_nat_gateway.main.id
+}
+
+output "nat_gateway_public_ip" {
+  description = "Public IP address used by the NAT Gateway"
+  value       = azurerm_public_ip.nat_gateway.ip_address
+}

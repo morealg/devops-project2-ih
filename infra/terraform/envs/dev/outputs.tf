@@ -135,3 +135,8 @@ output "application_gateway_public_ip" {
   description = "Application Gateway public IP"
   value       = module.app_gateway.application_gateway_public_ip
 }
+
+output "nat_gateway_public_ip" {
+  description = "Outbound public IP used by private VMs through the NAT Gateway"
+  value       = module.networking.nat_gateway_public_ip
+}
