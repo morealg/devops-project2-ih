@@ -75,7 +75,6 @@ resource "azurerm_application_gateway" "main" {
   backend_http_settings {
     name                  = "api-http-settings"
     cookie_based_affinity = "Disabled"
-    path                  = "/actuator/health"
     port                  = 8080
     protocol              = "Http"
     request_timeout       = 30
