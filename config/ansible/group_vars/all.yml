@@ -1,0 +1,18 @@
+project_name: burgerbuilder
+
+frontend_root: /var/www/burgerbuilder
+frontend_server_name: _
+
+backend_app_user: burgerbuilder
+backend_app_group: burgerbuilder
+backend_app_root: /opt/burgerbuilder/backend
+backend_service_name: burgerbuilder-backend
+backend_service_port: 8080
+backend_jar_name: burgerbuilder.jar
+
+azure_sql_hostname: sql-bb-dev-team5.database.windows.net
+azure_sql_dbname: burgerbuilderdb
+key_vault_name: kv-bb-dev-team5
+sql_admin_username_secret_name: sql-admin-username
+sql_admin_password_secret_name: sql-admin-password
+

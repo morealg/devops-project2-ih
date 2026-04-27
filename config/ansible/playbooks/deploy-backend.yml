@@ -1,0 +1,28 @@
+---
+- name: Configure and deploy the backend VM
+  hosts: api
+  become: true
+
+  pre_tasks:
+    - name: Fail early if artifact_path was not provided
+      ansible.builtin.assert:
+        that:
+          - artifact_path is defined
+          - artifact_path | length > 0
+        fail_msg: "Pass the packaged backend folder with --extra-vars \"artifact_path=...\"."
+
+    - name: Find the packaged Spring Boot jar on the controller
+      ansible.builtin.set_fact:
+        backend_artifact_file: "{{ lookup('ansible.builtin.fileglob', artifact_path ~ '/*.jar', wantlist=True) | first }}"
+
+    - name: Fail if no jar artifact was found
+      ansible.builtin.assert:
+        that:
+          - backend_artifact_file is defined
+          - backend_artifact_file | length > 0
+        fail_msg: "No .jar file was found under {{ artifact_path }}."
+
+  roles:
+    - role: common
+    - role: backend_deploy
+

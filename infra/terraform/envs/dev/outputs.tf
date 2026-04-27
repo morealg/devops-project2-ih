@@ -101,6 +101,15 @@ output "vm_private_ips" {
   }
 }
 
+output "vm_managed_identity_principal_ids" {
+  description = "Managed identity principal IDs for VMs that have them enabled"
+  value = {
+    web = module.vm_web.principal_id
+    api = module.vm_api.principal_id
+    ops = module.vm_ops.principal_id
+  }
+}
+
 output "internal_load_balancers" {
   description = "Internal load balancer names"
   value = {

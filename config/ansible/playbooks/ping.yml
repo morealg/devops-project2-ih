@@ -1,0 +1,10 @@
+---
+- name: Verify Ansible can reach every VM
+  hosts: all
+  become: false
+  gather_facts: false
+
+  tasks:
+    - name: Ping the remote host
+      ansible.builtin.ping:
+

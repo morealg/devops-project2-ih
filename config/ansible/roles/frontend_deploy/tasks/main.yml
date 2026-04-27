@@ -1,0 +1,52 @@
+---
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: true
+
+- name: Ensure the frontend root exists
+  ansible.builtin.file:
+    path: "{{ frontend_root }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+- name: Deploy the built frontend files
+  ansible.builtin.copy:
+    src: "{{ artifact_path }}/"
+    dest: "{{ frontend_root }}/"
+    owner: www-data
+    group: www-data
+    mode: "0644"
+  notify: Restart nginx
+
+- name: Install the nginx site configuration
+  ansible.builtin.template:
+    src: nginx-site.conf.j2
+    dest: /etc/nginx/sites-available/burgerbuilder.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart nginx
+
+- name: Enable the burgerbuilder nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/burgerbuilder.conf
+    dest: /etc/nginx/sites-enabled/burgerbuilder.conf
+    state: link
+  notify: Restart nginx
+
+- name: Disable the default nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Restart nginx
+
+- name: Ensure nginx is enabled and running
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true
+

@@ -33,6 +33,12 @@ variable "ssh_public_key" {
   type        = string
 }
 
+variable "enable_system_assigned_identity" {
+  description = "Whether to enable a system-assigned managed identity for the VM"
+  type        = bool
+  default     = false
+}
+
 variable "tags" {
   description = "Common tags"
   type        = map(string)

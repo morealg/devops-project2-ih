@@ -27,6 +27,20 @@ resource "azurerm_key_vault" "main" {
     ]
   }
 
+  dynamic "access_policy" {
+    for_each = toset(var.additional_secret_reader_object_ids)
+
+    content {
+      tenant_id = var.tenant_id
+      object_id = access_policy.value
+
+      secret_permissions = [
+        "Get",
+        "List",
+      ]
+    }
+  }
+
   tags = var.tags
 }
 

@@ -46,6 +46,9 @@ module "keyvault" {
   current_user_object_id     = var.current_user_object_id
   private_endpoint_subnet_id = module.networking.subnet_ids["private_endpoints"]
   vnet_id                    = module.networking.vnet_id
+  additional_secret_reader_object_ids = compact([
+    module.vm_ops.principal_id
+  ])
   tags                       = local.common_tags
 }
 
@@ -85,6 +88,7 @@ module "vm_ops" {
   vm_size             = var.vm_sizes["ops"]
   admin_username      = var.admin_username
   ssh_public_key      = var.ssh_public_key
+  enable_system_assigned_identity = true
   tags                = local.common_tags
 }
 

@@ -1,0 +1,101 @@
+---
+- name: Install Java 21 runtime
+  ansible.builtin.apt:
+    name: openjdk-21-jre-headless
+    state: present
+    update_cache: true
+
+- name: Ensure the backend app group exists
+  ansible.builtin.group:
+    name: "{{ backend_app_group }}"
+    state: present
+
+- name: Ensure the backend app user exists
+  ansible.builtin.user:
+    name: "{{ backend_app_user }}"
+    group: "{{ backend_app_group }}"
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+
+- name: Ensure the backend application root exists
+  ansible.builtin.file:
+    path: "{{ backend_app_root }}"
+    state: directory
+    owner: "{{ backend_app_user }}"
+    group: "{{ backend_app_group }}"
+    mode: "0755"
+
+- name: Log in to Azure with the ops VM managed identity
+  ansible.builtin.command: az login --identity
+  delegate_to: localhost
+  become: false
+  run_once: true
+  changed_when: false
+
+- name: Read SQL username from Key Vault
+  ansible.builtin.command: >
+    az keyvault secret show
+    --vault-name {{ key_vault_name }}
+    --name {{ sql_admin_username_secret_name }}
+    --query value
+    -o tsv
+  delegate_to: localhost
+  become: false
+  run_once: true
+  register: sql_admin_username_value
+  changed_when: false
+
+- name: Read SQL password from Key Vault
+  ansible.builtin.command: >
+    az keyvault secret show
+    --vault-name {{ key_vault_name }}
+    --name {{ sql_admin_password_secret_name }}
+    --query value
+    -o tsv
+  delegate_to: localhost
+  become: false
+  run_once: true
+  register: sql_admin_password_value
+  changed_when: false
+
+- name: Copy the backend jar to the VM
+  ansible.builtin.copy:
+    src: "{{ backend_artifact_file }}"
+    dest: "{{ backend_app_root }}/{{ backend_jar_name }}"
+    owner: "{{ backend_app_user }}"
+    group: "{{ backend_app_group }}"
+    mode: "0644"
+  notify: Restart backend service
+
+- name: Render the backend environment file
+  ansible.builtin.template:
+    src: backend.env.j2
+    dest: "{{ backend_app_root }}/backend.env"
+    owner: "{{ backend_app_user }}"
+    group: "{{ backend_app_group }}"
+    mode: "0600"
+  vars:
+    backend_sql_username: "{{ sql_admin_username_value.stdout }}"
+    backend_sql_password: "{{ sql_admin_password_value.stdout }}"
+  notify: Restart backend service
+
+- name: Install the backend systemd unit
+  ansible.builtin.template:
+    src: backend.service.j2
+    dest: "/etc/systemd/system/{{ backend_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart backend service
+
+- name: Reload systemd so it notices the new unit
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
+- name: Ensure the backend service is enabled and running
+  ansible.builtin.service:
+    name: "{{ backend_service_name }}"
+    state: started
+    enabled: true
+

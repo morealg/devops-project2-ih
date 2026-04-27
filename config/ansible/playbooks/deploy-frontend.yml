@@ -1,0 +1,17 @@
+---
+- name: Configure and deploy the frontend VM
+  hosts: web
+  become: true
+
+  pre_tasks:
+    - name: Fail early if artifact_path was not provided
+      ansible.builtin.assert:
+        that:
+          - artifact_path is defined
+          - artifact_path | length > 0
+        fail_msg: "Pass the built frontend folder with --extra-vars \"artifact_path=...\"."
+
+  roles:
+    - role: common
+    - role: frontend_deploy
+

@@ -17,3 +17,8 @@ output "network_interface_id" {
   description = "NIC ID"
   value       = azurerm_network_interface.main.id
 }
+
+output "principal_id" {
+  description = "System-assigned managed identity principal ID, if enabled"
+  value       = try(azurerm_linux_virtual_machine.main.identity[0].principal_id, null)
+}
