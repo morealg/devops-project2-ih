@@ -27,7 +27,7 @@
     mode: "0755"
 
 - name: Log in to Azure with the ops VM managed identity
-  ansible.builtin.command: az login --identity
+  ansible.builtin.command: az login --identity  --allow-no-subscriptions
   delegate_to: localhost
   become: false
   run_once: true
