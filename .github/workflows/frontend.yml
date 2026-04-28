@@ -67,6 +67,7 @@ jobs:
           # instead of hardcoded http://localhost:8080/api/...
           VITE_API_BASE_URL: ""
           NODE_ENV: production
+          VITE_APPINSIGHTS_CONNECTION_STRING: ${{ secrets.VITE_APPINSIGHTS_CONNECTION_STRING }}
 
       # 6. Save the built files so the deploy job can download them
       #    WHY: The deploy job runs on a different machine (your VM),
