@@ -110,3 +110,4 @@ See `docs/runbook.md` for troubleshooting steps.
 ## Demo Script
 See `docs/demo-script.md` for presentation walkthrough.
 # pipeline test Tue Apr 28 14:22:56 +04 2026
+# sonar retest Tue Apr 28 14:38:36 +04 2026
