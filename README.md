@@ -113,3 +113,4 @@ See `docs/demo-script.md` for presentation walkthrough.
 # sonar retest Tue Apr 28 14:38:36 +04 2026
 # trigger retest Tue Apr 28 14:41:32 +04 2026
 # enable sonar Tue Apr 28 15:03:37 +04 2026
+# final validation Tue Apr 28 15:25:42 +04 2026
