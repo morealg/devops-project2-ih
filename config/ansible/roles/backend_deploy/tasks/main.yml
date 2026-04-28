@@ -131,6 +131,14 @@
     backend_sql_password: "{{ sql_admin_password_value.stdout }}"
   notify: Restart backend service
 
+- name: Download Azure Monitor Java agent
+  ansible.builtin.get_url:
+    url: https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.7.5/applicationinsights-agent-3.7.5.jar
+    dest: "{{ backend_app_root }}/applicationinsights-agent.jar"
+    owner: "{{ backend_app_user }}"
+    group: "{{ backend_app_group }}"
+    mode: "0644"
+
 - name: Install the backend systemd unit
   ansible.builtin.template:
     src: backend.service.j2

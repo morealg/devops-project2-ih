@@ -8,7 +8,7 @@ User={{ backend_app_user }}
 Group={{ backend_app_group }}
 WorkingDirectory={{ backend_app_root }}
 EnvironmentFile={{ backend_app_root }}/backend.env
-ExecStart=/usr/bin/java -jar {{ backend_app_root }}/{{ backend_jar_name }}
+ExecStart=/usr/bin/java -javaagent:{{ backend_app_root }}/applicationinsights-agent.jar -jar {{ backend_app_root }}/{{ backend_jar_name }}
 Restart=always
 RestartSec=10
 
