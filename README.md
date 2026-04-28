@@ -112,3 +112,4 @@ See `docs/demo-script.md` for presentation walkthrough.
 # pipeline test Tue Apr 28 14:22:56 +04 2026
 # sonar retest Tue Apr 28 14:38:36 +04 2026
 # trigger retest Tue Apr 28 14:41:32 +04 2026
+# enable sonar Tue Apr 28 15:03:37 +04 2026
