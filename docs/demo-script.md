@@ -1,7 +1,7 @@
 # Demo Script — Burger Builder on Azure
 
 **Total time:** 4–5 minutes  
-**Presenter setup:** Azure Portal open, browser tab with `https://20.230.242.199/` ready, GitHub Actions tab ready
+**Presenter setup:** Azure Portal open, browser tab with `https://20.230.242.199/` ready, GitHub Actions tab ready, monitoring/alerts screenshot ready
 
 ---
 
@@ -29,6 +29,7 @@ Point to each component:
 > - "The database is Azure SQL — accessible only through a Private Endpoint. There is no public access at all."
 > - "Key Vault stores secrets — also private only."
 > - "The Ops VM hosts our GitHub Actions self-hosted runner and SonarQube."
+> - "We also used internal load balancers in front of the web and API tiers so the architecture is already ready for future VMSS scale-out."
 
 ---
 
@@ -61,6 +62,8 @@ Point to each component:
 
 > "The Burger Builder app — live, running through the Application Gateway."
 
+> "The browser warning appears because we used a self-signed certificate for demonstration. HTTPS is still enabled and traffic is encrypted, but in production we would use a real domain and a trusted CA-signed certificate."
+
 **Walk through the app:**
 > - "I can build a burger — select ingredients"
 > - "Place the order"
@@ -78,9 +81,11 @@ Point to each component:
 > - "If any VM CPU exceeds 70% for 5 minutes — warning alert"
 > - "If SQL DTU consumption exceeds 80% — warning alert"
 
+> "We also verified alert delivery by email through our action group, so monitoring is not only configured — it is demonstrable."
+
 **Open `appi-api-bb-dev` → Live Metrics**
 
-> "Application Insights is connected to the backend — we can see live requests, response times, and failures in real time."
+> "Application Insights is connected to the apps, and Log Analytics plus alert emails give us platform-level visibility."
 
 ---
 
@@ -101,7 +106,7 @@ Point to each component:
 
 ## Closing (15 seconds)
 
-> "To summarize: private 3-tier architecture, WAF-protected public entry point, fully automated infrastructure and deployment, live monitoring with alerts, and code quality scanning on every push."
+> "To summarize: private 3-tier architecture, WAF-protected public entry point, HTTPS enabled on Application Gateway, fully automated infrastructure and deployment, live monitoring with alerts and email notifications, and code quality scanning on every push."
 >
 > "Thank you."
 
@@ -116,4 +121,5 @@ Point to each component:
 | What if the frontend VM goes down? | The App Gateway health probe detects it immediately and the alert fires |
 | Why WAF v2? | It provides built-in protection against OWASP Top 10 attacks |
 | How are secrets managed? | All secrets are stored in Key Vault — no hardcoded credentials anywhere |
+| Why does the browser show "not secure"? | We used a self-signed certificate for demo purposes. HTTPS still encrypts traffic, but production would use a trusted CA-signed certificate on a real domain |
 
