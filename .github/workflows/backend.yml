@@ -44,7 +44,7 @@ jobs:
 
   sonarqube:
     name: SonarQube Code Quality Scan
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, ops]
     needs: build
     if: (github.event_name == 'pull_request' || github.ref == 'refs/heads/main') && vars.ENABLE_SONAR == 'true'
 
@@ -83,7 +83,7 @@ jobs:
 
   deploy:
     name: Deploy to Backend VM
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, ops]
     needs: [build, sonarqube]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.ENABLE_PRIVATE_DEPLOY == 'true'
 
@@ -103,7 +103,7 @@ jobs:
         run: |
           ansible-playbook playbooks/deploy-backend.yml \
             -i inventories/dev/hosts.yml \
-            --extra-vars "artifact_path=../../backend/target"
+            --extra-vars "artifact_path=../../target"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
           AZURE_SQL_HOSTNAME: sql-bb-dev-team5.database.windows.net
@@ -114,4 +114,4 @@ jobs:
       - name: Health Check
         run: |
           sleep 15
-          curl -k -f https://20.230.242.199/api/health | grep -i "UP\|ok\|success" || echo "Health check passed"
+          curl -k -f https://20.230.242.199/api/health | grep '"status":"UP"'

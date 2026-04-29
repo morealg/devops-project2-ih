@@ -1,43 +1,24 @@
-# ============================================================
-# FILE: .github/workflows/frontend.yml
-# PURPOSE: Builds the React/Vite frontend and deploys it.
-#
-# HOW IT WORKS (Hybrid Runner Pattern):
-#   JOB 1 "build"  → runs on GitHub's free cloud servers
-#                     installs npm deps, runs npm build
-#                     saves the built files as an "artifact"
-#
-#   JOB 2 "deploy" → runs on YOUR self-hosted runner (the Ops VM)
-#                     downloads the artifact
-#                     uses Ansible to push files to the Frontend VM
-# ============================================================
-
 name: Frontend CI/CD
 
 on:
   push:
     branches: [main]
-    paths: ['frontend/**']     # Only triggers if frontend code changed
+    paths: ['frontend/**']
   pull_request:
     branches: [main]
     paths: ['frontend/**']
 
 jobs:
 
-  # ─────────────────────────────────────────────
-  # JOB 1: BUILD — runs on GitHub's free servers
-  # ─────────────────────────────────────────────
   build:
     name: Build React App
     runs-on: ubuntu-latest
 
     steps:
 
-      # 1. Get the code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. Install Node.js (Vite requires Node 18+)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -45,77 +26,57 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      # 3. Install all npm packages listed in package.json
       - name: Install Dependencies
         working-directory: ./frontend
         run: npm ci
-        # WHY "npm ci" instead of "npm install"?
-        # ci = clean install. Faster, deterministic, fails if lock file is out of sync.
 
-      # 4. Run unit tests (if you have any)
       - name: Run Tests
         working-directory: ./frontend
         run: npm test -- --run
-        # This project uses Vitest, so we run the suite once in CI mode.
 
-      # 5. Build the production bundle (outputs to frontend/dist/)
       - name: Build for Production
         working-directory: ./frontend
         run: npm run build
         env:
-          # This tells Vite to use relative API paths like /api/...
-          # instead of hardcoded http://localhost:8080/api/...
           VITE_API_BASE_URL: ""
           NODE_ENV: production
           VITE_APPINSIGHTS_CONNECTION_STRING: ${{ secrets.VITE_APPINSIGHTS_CONNECTION_STRING }}
 
-      # 6. Save the built files so the deploy job can download them
-      #    WHY: The deploy job runs on a different machine (your VM),
-      #         so it needs to download the files GitHub saved here.
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist/
-          retention-days: 1    # Only keep for 1 day to save storage
+          retention-days: 1
 
-  # ─────────────────────────────────────────────
-  # JOB 2: DEPLOY — runs on YOUR self-hosted runner
-  # Only runs when code is pushed to main (not on PRs)
-  # ─────────────────────────────────────────────
   deploy:
     name: Deploy to Frontend VM
-    runs-on: self-hosted       # ← This is YOUR Ops VM, not GitHub's servers
-    needs: build               # ← Only starts AFTER the build job succeeds
+    runs-on: [self-hosted, linux, ops]
+    needs: build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.ENABLE_PRIVATE_DEPLOY == 'true'
 
     steps:
 
-      # 1. Download the built files that Job 1 uploaded
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: ./dist
 
-      # 2. Get the repo (needed for Ansible playbooks)
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 3. Use Ansible (Person 2's playbook) to copy files to the Frontend VM
-      #    WHY Ansible: It handles SSH, permissions, service restarts automatically.
       - name: Deploy via Ansible
+        working-directory: ./config/ansible
         run: |
-          ansible-playbook config/ansible/playbooks/deploy-frontend.yml \
-            -i config/ansible/inventories/dev/hosts.yml \
-            --extra-vars "artifact_path=./dist"
+          ansible-playbook playbooks/deploy-frontend.yml \
+            -i inventories/dev/hosts.yml \
+            --extra-vars "artifact_path=../../dist"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
-      # 4. Quick health check — confirm the frontend is reachable
       - name: Verify Deployment
         run: |
-          sleep 10   # Wait a moment for the server to restart
-          curl -f http://${{ secrets.FRONTEND_VM_IP }} || exit 1
+          sleep 10
+          curl -f http://${{ secrets.FRONTEND_VM_IP }}
           echo "Frontend is UP!"
-
