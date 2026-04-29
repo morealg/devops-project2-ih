@@ -77,7 +77,7 @@ jobs:
         run: |
           ansible-playbook playbooks/deploy-frontend.yml \
             -i inventories/dev/hosts.yml \
-            --extra-vars "artifact_path=../../dist"
+            --extra-vars "artifact_path=$(pwd)/../../dist"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
 
