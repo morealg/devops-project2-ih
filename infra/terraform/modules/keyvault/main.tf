@@ -27,6 +27,7 @@ resource "azurerm_key_vault" "main" {
     ]
   }
 
+
   dynamic "access_policy" {
     for_each = toset(var.additional_secret_reader_object_ids)
 
@@ -57,6 +58,13 @@ resource "azurerm_key_vault" "main" {
   }
 
   tags = var.tags
+}
+resource "azurerm_role_assignment" "secret_officers" {
+  for_each = toset(var.additional_secret_writer_object_ids)
+
+  scope                = azurerm_key_vault.main.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = each.value
 }
 
 resource "azurerm_private_dns_zone" "keyvault" {
