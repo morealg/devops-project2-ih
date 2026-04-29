@@ -23,6 +23,14 @@ jobs:
   terraform:
     name: Terraform Plan & Apply
     runs-on: ubuntu-latest     # GitHub-hosted runner (free, clean VM every run)
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_sql_admin_password: ${{ secrets.SQL_PASSWORD }}
+      TF_INPUT: "false"
+      TF_IN_AUTOMATION: "true"
 
     defaults:
       run:
@@ -47,43 +55,33 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # 4. Check code formatting — fails if Terraform files are not clean
+      - name: Validate required Terraform inputs
+        run: |
+          if [ -z "${TF_VAR_sql_admin_password}" ]; then
+            echo "::error::GitHub secret SQL_PASSWORD is missing or empty."
+            exit 1
+          fi
+
+      # 4. Check code formatting - fails if Terraform files are not clean
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
 
       # 5. Download required Azure provider plugins + connect to remote state backend
       - name: Terraform Init
-        run: terraform init
-        env:
-          ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET:   ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: terraform init -input=false
 
       # 6. Validate syntax is correct
       - name: Terraform Validate
         run: terraform validate
 
-      # 7. PLAN — shows what WOULD change. Runs on every Pull Request.
-      #    This is safe — it never touches real infrastructure.
+      # 7. PLAN - shows what WOULD change. Runs on every Pull Request.
+      #    This is safe - it never touches real infrastructure.
       - name: Terraform Plan
-        run: terraform plan -out=tfplan
-        env:
-          ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET:   ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          TF_VAR_sql_admin_password: ${{ secrets.SQL_PASSWORD }}
+        run: terraform plan -input=false -out=tfplan
 
-      # 8. APPLY — actually creates/updates Azure resources.
+      # 8. APPLY - actually creates/updates Azure resources.
       #    ONLY runs when code is merged into main (not on PRs).
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve tfplan
-        env:
-          ARM_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET:   ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          TF_VAR_sql_admin_password: ${{ secrets.SQL_PASSWORD }}
+        run: terraform apply -input=false -auto-approve tfplan
 
