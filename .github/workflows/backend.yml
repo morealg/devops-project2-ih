@@ -103,7 +103,7 @@ jobs:
         run: |
           ansible-playbook playbooks/deploy-backend.yml \
             -i inventories/dev/hosts.yml \
-            --extra-vars "artifact_path=../../target"
+            --extra-vars "artifact_path=$(pwd)../../target"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
           AZURE_SQL_HOSTNAME: sql-bb-dev-team5.database.windows.net
