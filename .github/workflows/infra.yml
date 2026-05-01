@@ -4,7 +4,7 @@
 #   - On Pull Request → only shows a PLAN (no real changes)
 #   - On merge to main → actually APPLIES changes to Azure
 # ============================================================
-
+#salam
 name: Infrastructure (Terraform)
 
 on:
